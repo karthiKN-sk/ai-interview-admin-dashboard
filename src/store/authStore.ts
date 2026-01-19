@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import axios from "axios";
+import api from "../api/client";
 
 const API = import.meta.env.VITE_API_BASE_URL;
 
@@ -12,12 +12,14 @@ export interface User {
 export interface AuthState {
     user: User | null;
     accessToken: string | null;
+    refreshToken: string | null;
     loading: boolean;
     error: string | null;
 
     login: (email: string, password: string) => Promise<void>;
     logout: () => void;
     isAuthenticated: () => boolean;
+    setAccessToken: (token: string) => void;
 }
 
 
@@ -25,15 +27,19 @@ export interface AuthState {
 
 export const useAuthStore = create<AuthState>((set, get) => ({
     user: null,
-    accessToken: localStorage.getItem("access_token"),
+    accessToken: localStorage.getItem("accessToken"),
+    refreshToken: localStorage.getItem("refreshToken"),
     loading: false,
     error: null,
-
+    setAccessToken: (token) => {
+        localStorage.setItem("accessToken", token);
+        set({ accessToken: token });
+    },
     login: async (email, password) => {
         try {
             set({ loading: true, error: null });
 
-            const res = await axios.post(`${API}/auth/login`, {
+            const res = await api.post(`${API}/auth/login`, {
                 email,
                 password,
             });
@@ -41,12 +47,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             const { access_token, refresh_token, admin } = res.data;
 
             // Persist tokens
-            localStorage.setItem("access_token", access_token);
-            localStorage.setItem("refresh_token", refresh_token);
+            localStorage.setItem("accessToken", access_token);
+            localStorage.setItem("refreshToken", refresh_token);
 
             set({
                 user: admin,
                 accessToken: access_token,
+                refreshToken: refresh_token,
                 loading: false,
             });
 

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { DASHBOARD_STATS } from "../data/statsConfig";
+import api from "../api/client";
 
 
 export interface InterviewList {
@@ -32,14 +33,11 @@ export const useDashboardStore = create<DashboardStore>((set) => ({
     // ---------- Fetch Stats ----------
     fetchStats: async () => {
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/admin/dashboard/stats`);
-            if (!res.ok) throw new Error("Failed to load");
-
-            const data = await res.json();
-            console.log("Fetched stats:", data);
+            const { data } = await api.get("/admin/dashboard/stats");
             set({
                 stats: [
                     { name: "Total Interviews", value: data.total_interviews },
+                    { name: "Selected", value: data.selected },
                     { name: "Completed", value: data.completed },
                     { name: "Upcoming", value: data.upcoming },
                     { name: "Rejected", value: data.rejected },
@@ -61,11 +59,7 @@ export const useDashboardStore = create<DashboardStore>((set) => ({
     // ---------- Fetch Recently Created Interview Cards ----------
     fetchScheduledInterviews: async () => {
         try {
-            const res = await fetch(
-                `${import.meta.env.VITE_API_BASE_URL}/admin/interviews/status/scheduled`
-            );
-
-            const data = await res.json();
+            const { data } = await api.get("/admin/interviews/status/scheduled");
             set({ interviewsList: data, isInterviewsAvailable: data.length > 0 });
 
         } catch (error) {

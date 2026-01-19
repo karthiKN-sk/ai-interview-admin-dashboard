@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { InterviewList } from "./dashboardStore";
+import api from "../api/client";
 
 
 export interface Questions {
@@ -66,31 +67,20 @@ interface InterviewState {
     fetchInterviewDetails: (id: string) => Promise<InterviewFullDetails | null>;
     deleteInterview: (id: string) => Promise<void>;
     downloadReport: (id: string) => Promise<Blob>;
+    selectCandidate: (id: string) => Promise<void>;
+    rejectCandidate: (id: string) => Promise<void>;
 }
 
 export const useInterviewStore = create<InterviewState>()((set) => ({
     interviews: [],
 
     createInterview: async ({ role, job_description, duration, types }) => {
-        const res = await fetch(
-            `${import.meta.env.VITE_API_BASE_URL}/admin/interviews/create`,
-            {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    role,
-                    job_description,
-                    duration,
-                    types,
-                }),
-            }
-        );
-
-        if (!res.ok) {
-            throw new Error("Failed to create interview");
-        }
-
-        const data = await res.json();
+        const { data } = await api.post("/admin/interviews/create", {
+            role,
+            job_description,
+            duration,
+            types,
+        });
 
         return {
             questions: data.questions,
@@ -100,10 +90,7 @@ export const useInterviewStore = create<InterviewState>()((set) => ({
 
     fetchScheduledInterviews: async () => {
         try {
-            const res = await fetch(
-                `${import.meta.env.VITE_API_BASE_URL}/admin/interviews/status/scheduled`
-            );
-            const data = await res.json();
+            const { data } = await api.get("/admin/interviews/status/scheduled");
             set({ interviews: data });
 
         } catch (error) {
@@ -112,10 +99,8 @@ export const useInterviewStore = create<InterviewState>()((set) => ({
     },
     fetchCompletedInterviews: async () => {
         try {
-            const res = await fetch(
-                `${import.meta.env.VITE_API_BASE_URL}/admin/interviews/status/completed`
+            const { data } = await api.get("/admin/interviews/status/completed"
             );
-            const data = await res.json();
             set({ interviews: data });
 
         } catch (error) {
@@ -125,16 +110,7 @@ export const useInterviewStore = create<InterviewState>()((set) => ({
 
     fetchInterviewDetails: async (id: string): Promise<InterviewFullDetails | null> => {
         try {
-            const res = await fetch(
-                `${import.meta.env.VITE_API_BASE_URL}/admin/interviews/${id}`
-            );
-
-            if (!res.ok) {
-                console.error("Failed to fetch interview details");
-                return null;
-            }
-
-            const data = await res.json();
+            const { data } = await api.get(`/admin/interviews/${id}`);
 
             // Ensure correct mapping
             const interview: InterviewDetails = {
@@ -166,12 +142,7 @@ export const useInterviewStore = create<InterviewState>()((set) => ({
     },
 
     deleteInterview: async (id: string) => {
-        const res = await fetch(
-            `${import.meta.env.VITE_API_BASE_URL}/admin/interviews/delete/${id}`,
-            { method: "DELETE" }
-        );
-
-        if (!res.ok) throw new Error("Failed to delete interview");
+        await api.delete(`/admin/interviews/delete/${id}`);
 
         set((state) => ({
             interviews: state.interviews.filter((i) => i.id !== id),
@@ -180,18 +151,18 @@ export const useInterviewStore = create<InterviewState>()((set) => ({
 
 
     downloadReport: async (candidateId: string) => {
-        const res = await fetch(
-            `${import.meta.env.VITE_API_BASE_URL}/admin/report/download/${candidateId}`,
-            {
-                method: "GET",
-            }
+        const res = await api.get(
+            `/admin/report/download/${candidateId}`,
+            { responseType: "blob" }
         );
-
-        if (!res.ok) {
-            throw new Error("Failed to download report");
-        }
-
-        return await res.blob(); // return PDF blob
+        return res.data.blob();
     },
 
+    selectCandidate: async (id: string) => {
+        await api.post(`/admin/candidates/${id}/select`);
+
+    },
+    rejectCandidate: async (id: string) => {
+        await api.post(`/admin/candidates/${id}/reject`);
+    },
 }));
