@@ -11,7 +11,7 @@ import AppLayout from "./components/layouts/AppLayout";
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/ai-interview-admin-dashboard">
       <Routes>
         {/* Public Routes*/}
         <Route path="/login" element={<LoginPage />} />

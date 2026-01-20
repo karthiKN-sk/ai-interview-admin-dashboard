@@ -1,18 +1,21 @@
 {
   "name": "ai-interview-admin-dashboard",
-  "private": true,
+  "homepage": "https://karthiKN-sk.github.io/ai-interview-admin-dashboard/",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.17",
     "axios": "^1.13.2",
     "date-fns": "^4.1.0",
+    "gh-pages": "^6.3.0",
     "lucide-react": "^0.555.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
