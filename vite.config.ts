@@ -8,5 +8,5 @@ export default defineConfig({
     react(),
     tailwindcss()
   ],
-  // base: "/ai-interview-admin-dashboard",
+  base: "/ai-interview-admin-dashboard",
 })
